@@ -1,10 +1,11 @@
 # Base: Imagen oficial de n8n
 FROM docker.io/n8nio/n8n:latest
 
-# Cambiamos a root para instalar paquetes
+# Cambiamos a root para garantizar permisos de instalación
 USER root
 
 # --- PASO 1: INSTALAR DEPENDENCIAS DE SISTEMA Y HERRAMIENTAS ---
+# Se incluyen todas las librerías necesarias para correr Chromium en Alpine.
 RUN apk add --no-cache \
     udev \
     nss \
@@ -19,20 +20,20 @@ RUN apk add --no-cache \
     wget \
     curl \
     # Dependencia de ejecución de Alpine Musl
-    && apk add --no-cache bash
+    bash
 
-# --- PASO 2: INSTALAR EL MÓDULO PUPPETEER-CORE (SIN DESCARGA) ---
-# Instalamos la librería Node.js, pero le decimos que OMITA la descarga AHORA.
-RUN npm install puppeteer-core@latest --unsafe-perm --no-cache --ignore-scripts
+# --- PASO 2: INSTALAR MÓDULO PUPPETEER-CORE GLOBALMENTE ---
+# Usamos '-g' (global) para forzar la instalación del paquete base.
+RUN npm install -g puppeteer-core@latest --unsafe-perm --no-cache
 
-# --- PASO 3: FORZAR LA DESCARGA DEL BINARIO (USANDO NODE) ---
-# Ejecutamos el script de instalación de Puppeteer directamente con 'node'.
-# Esta es la única forma de garantizar que se encuentre y ejecute.
-RUN node /usr/local/lib/node_modules/puppeteer-core/node_modules/.bin/puppeteer install \
+# --- PASO 3: FORZAR LA DESCARGA DE CHROMIUM (Método Definitivo) ---
+# Usamos 'npm exec' para ejecutar el binario 'puppeteer' de manera fiable
+# sin importar dónde lo haya colocado NPM en el sistema de archivos de Alpine.
+RUN npm exec puppeteer -- install \
     && npm cache clean --force
 
 # --- PASO 4: CONFIGURACIÓN DE VARIABLES (PARA N8N) ---
-# RUTA MÁS PROBABLE DESPUÉS DE LA DESCARGA EXITOSA (de la ruta moderna de Puppeteer)
+# ESTA RUTA DEBE CONFIGURARSE COMO VARIABLE DE ENTORNO EN COOLIFY
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/local/lib/node_modules/puppeteer-core/.chromium/chrome/linux-x64/chrome
 ENV PUPPETEER_SKIP_DOWNLOAD=false
 ENV PUPPETEER_DISABLE_SANDBOX=true
