@@ -2,9 +2,9 @@ FROM n8nio/n8n:latest
 
 USER root
 
-# Instalar Chromium y dependencias
-RUN apt-get update && \
-    apt-get install -y chromium \
+# Instalar Chromium y dependencias necesarias para Puppeteer
+RUN apt-get update && apt-get install -y \
+    chromium \
     chromium-driver \
     fonts-liberation \
     libasound2 \
@@ -23,10 +23,9 @@ RUN apt-get update && \
     libnss3 \
     libxshmfence1 \
     --no-install-recommends && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Puppeteer sin Chromium (para usar el del sistema)
+# Puppeteer sin Chromium (usa el chromium del sistema)
 RUN npm install -g puppeteer-core
 
 USER node
