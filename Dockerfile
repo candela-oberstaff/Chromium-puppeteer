@@ -1,40 +1,74 @@
-# Dockerfile recomendado
-FROM n8nio/n8n:latest
+FROM node:20-slim
 
-USER root
-
-# evitar prompts
-ENV DEBIAN_FRONTEND=noninteractive
-# no queremos que Puppeteer descargue su Chromium (porque instalamos el del sistema)
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-# indicamos explícitamente el path donde estará Chromium
-ENV PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium"
-
-# instalar Chromium y dependencias necesarias para Puppeteer
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates wget gnupg \
-    chromium \
+# ----------
+# 1) Instalar dependencias del sistema necesarias para Chromium + Puppeteer
+# ----------
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
     fonts-liberation \
     libasound2 \
     libatk-bridge2.0-0 \
     libatk1.0-0 \
+    libc6 \
+    libcairo2 \
     libcups2 \
     libdbus-1-3 \
-    libdrm2 \
-    libxkbcommon0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxfixes3 \
-    libxrandr2 \
+    libexpat1 \
+    libfontconfig1 \
     libgbm1 \
+    libglib2.0-0 \
     libgtk-3-0 \
+    libnspr4 \
     libnss3 \
-    libxshmfence1 \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+    libpango-1.0-0 \
+    libx11-6 \
+    libx11-xcb1 \
+    libxcb1 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxi6 \
+    libxrandr2 \
+    libxrender1 \
+    libxss1 \
+    libxtst6 \
+    wget \
+    xvfb \
+    && rm -rf /var/lib/apt/lists/*
 
-# instalar Puppeteer (sin descargar otro Chromium)
-RUN npm install -g puppeteer@latest --unsafe-perm
+# ----------
+# 2) Instalar n8n globalmente
+# ----------
+RUN npm install -g n8n
 
-# volver al usuario de n8n
-USER node
+# ----------
+# 3) Instalar Puppeteer (trae Chromium)
+# ----------
+RUN npm install -g puppeteer
+
+# ----------
+# 4) Crear usuario no root (Coolify recomienda esto)
+# ----------
+RUN useradd -m nodeuser
+USER nodeuser
+
+# ----------
+# 5) Variables para que n8n funcione + Puppeteer sin sandbox (recomendado en contenedores)
+# ----------
+ENV NODE_ENV=production
+ENV N8N_PORT=5678
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_DISABLE_SANDBOX=true
+
+# ----------
+# 6) Exponer puerto n8n
+# ----------
+EXPOSE 5678
+
+# ----------
+# 7) Ejecutar n8n
+# ----------
+CMD ["n8n", "start"]
