@@ -1,19 +1,34 @@
-# USAR ESTA IMAGEN BASE ESTABLE EN LUGAR DE LA ALPINE 'latest'
-FROM docker.io/n8nio/n8n:full
+# Volvemos a la única imagen que se resuelve correctamente
+FROM docker.io/n8nio/n8n:latest
 
 USER root
 
-# Instalamos Chromium con APT (el gestor de Debian/Ubuntu)
-RUN apt update && \
-    DEBIAN_FRONTEND=noninteractive apt install -y \
-        chromium \
-        wget \
-        # Dependencias comunes de Puppeteer en Debian
-        ca-certificates fonts-liberation libasound2 libatk1.0-0 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgcc1 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libnss3 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 \
-    && rm -rf /var/lib/apt/lists/*
+# Instalamos dependencias del sistema para que Puppeteer NPM funcione en Alpine.
+# Note que ya no instalamos el paquete 'chromium' de apk.
+RUN apk add --no-cache \
+    udev \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    libstdc++ \
+    zlib \
+    fontconfig \
+    # Dependencia de ejecución de Alpine Musl
+    && apk add --no-cache bash
 
-# Configuramos el path estándar de Debian
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+# --- PASO CRUCIAL: INSTALAR PUPPETEER VIA NPM ---
+# Entramos al directorio de n8n, instalamos el módulo Puppeteer y limpiamos.
+# Usamos puppeteer-core ya que n8n ya tiene el módulo base de Puppeteer.
+WORKDIR /usr/local/lib/node_modules/n8n
+RUN npm install puppeteer-core@latest --unsafe-perm --no-cache \
+    && npm cache clean --force
+
+# Path donde NPM instala el binario de Chrome que se descarga
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/local/lib/node_modules/n8n/node_modules/puppeteer-core/.chromium/linux-124.0.6367.73/chrome-linux/chrome
+ENV PUPPETEER_SKIP_DOWNLOAD=false
+ENV PUPPETEER_DISABLE_SANDBOX=true
 ENV PUPPETEER_ARGS='--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --disable-gpu'
 
 USER node
