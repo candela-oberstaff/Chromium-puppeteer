@@ -1,9 +1,10 @@
-# Volvemos a la única imagen que se resuelve correctamente
+# Base: Imagen oficial de n8n
 FROM docker.io/n8nio/n8n:latest
 
+# Cambiamos a root para instalar paquetes
 USER root
 
-# Instalamos dependencias del sistema y herramientas de red necesarias
+# --- PASO 1: INSTALAR DEPENDENCIAS DE SISTEMA Y HERRAMIENTAS ---
 RUN apk add --no-cache \
     udev \
     nss \
@@ -20,20 +21,22 @@ RUN apk add --no-cache \
     # Dependencia de ejecución de Alpine Musl
     && apk add --no-cache bash
 
-# --- PASO 1: INSTALAR EL MÓDULO PUPPETEER-CORE (SIN DESCARGA) ---
+# --- PASO 2: INSTALAR EL MÓDULO PUPPETEER-CORE (SIN DESCARGA) ---
 # Instalamos la librería Node.js, pero le decimos que OMITA la descarga AHORA.
 RUN npm install puppeteer-core@latest --unsafe-perm --no-cache --ignore-scripts
 
-# --- PASO 2: FORZAR LA DESCARGA DEL BINARIO (CORRECCIÓN CRÍTICA DE RUTA) ---
-# El binario 'puppeteer' ya está en el PATH global (/usr/local/bin)
-RUN puppeteer install \
+# --- PASO 3: FORZAR LA DESCARGA DEL BINARIO (USANDO RUTA ABSOLUTA) ---
+# Usamos la ruta absoluta del binario global: /usr/local/bin/puppeteer
+# Esto evita por completo el error de 'not found' del PATH.
+RUN /usr/local/bin/puppeteer install \
     && npm cache clean --force
 
-# Path del binario de Chromium (Usamos la ruta más probable después de la descarga)
-# Deberás revisar esta ruta después del despliegue exitoso (ver paso 2).
+# --- PASO 4: CONFIGURACIÓN DE VARIABLES (PARA N8N) ---
+# RUTA MÁS PROBABLE DESPUÉS DE LA DESCARGA EXITOSA.
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/local/lib/node_modules/puppeteer-core/.chromium/chrome/linux-x64/chrome
 ENV PUPPETEER_SKIP_DOWNLOAD=false
 ENV PUPPETEER_DISABLE_SANDBOX=true
 ENV PUPPETEER_ARGS='--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --disable-gpu'
 
+# Regresamos al usuario por defecto
 USER node
