@@ -18,15 +18,14 @@ RUN apk add --no-cache \
     # Dependencia de ejecución de Alpine Musl
     && apk add --no-cache bash
 
-# --- PASO CRUCIAL: INSTALAR PUPPETEER VIA NPM ---
-# Entramos al directorio de n8n, instalamos el módulo Puppeteer y limpiamos.
-# Usamos puppeteer-core ya que n8n ya tiene el módulo base de Puppeteer.
-WORKDIR /usr/local/lib/node_modules/n8n
+# --- PASO CRUCIAL: INSTALAR PUPPETEER VIA NPM A NIVEL GLOBAL ---
+# Quitamos el WORKDIR. La instalación se hace en /usr/local/lib/node_modules
+# (El path de instalación del binario cambiará)
 RUN npm install puppeteer-core@latest --unsafe-perm --no-cache \
     && npm cache clean --force
 
-# Path donde NPM instala el binario de Chrome que se descarga
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/local/lib/node_modules/n8n/node_modules/puppeteer-core/.chromium/linux-124.0.6367.73/chrome-linux/chrome
+# Path donde NPM instala el binario de Chrome que se descarga (Ruta Global)
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/local/lib/node_modules/puppeteer-core/.chromium/linux-124.0.6367.73/chrome-linux/chrome
 ENV PUPPETEER_SKIP_DOWNLOAD=false
 ENV PUPPETEER_DISABLE_SANDBOX=true
 ENV PUPPETEER_ARGS='--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --disable-gpu'
