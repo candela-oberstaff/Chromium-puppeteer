@@ -29,4 +29,4 @@ ENV PUPPETEER_ARGS='--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usag
 # Exponer y ejecutar n8n
 EXPOSE 5678
 USER node
-ENTRYPOINT ["tini", "--", "n8n"]
+ENTRYPOINT ["tini", "--", "/usr/local/bin/n8n"]
