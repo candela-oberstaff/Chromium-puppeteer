@@ -1,8 +1,7 @@
-FROM n8nio/n8n:latest
+FROM n8nio/n8n:latest-debian
 
 USER root
 
-# Instalar Chromium y dependencias necesarias para Puppeteer
 RUN apt-get update && apt-get install -y \
     chromium \
     chromium-driver \
@@ -25,7 +24,6 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Puppeteer sin Chromium (usa el chromium del sistema)
-RUN npm install -g puppeteer-core
+ENV PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium"
 
 USER node
