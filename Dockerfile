@@ -1,10 +1,19 @@
-FROM n8nio/n8n:latest-debian
+# Dockerfile recomendado
+FROM n8nio/n8n:latest
 
 USER root
 
-RUN apt-get update && apt-get install -y \
+# evitar prompts
+ENV DEBIAN_FRONTEND=noninteractive
+# no queremos que Puppeteer descargue su Chromium (porque instalamos el del sistema)
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+# indicamos explícitamente el path donde estará Chromium
+ENV PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium"
+
+# instalar Chromium y dependencias necesarias para Puppeteer
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates wget gnupg \
     chromium \
-    chromium-driver \
     fonts-liberation \
     libasound2 \
     libatk-bridge2.0-0 \
@@ -21,9 +30,11 @@ RUN apt-get update && apt-get install -y \
     libgtk-3-0 \
     libnss3 \
     libxshmfence1 \
-    --no-install-recommends && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
-ENV PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium"
+# instalar Puppeteer (sin descargar otro Chromium)
+RUN npm install -g puppeteer@latest --unsafe-perm
 
+# volver al usuario de n8n
 USER node
