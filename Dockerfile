@@ -1,30 +1,50 @@
-FROM n8nio/n8n:latest-alpine
+FROM n8nio/n8n:latest
 
 USER root
 
-# Instalar Chromium
-RUN apk update && \
-    apk add --no-cache \
+RUN apt-get update && apt-get install -y \
     chromium \
-    nss \
-    freetype \
-    harfbuzz \
     ca-certificates \
-    ttf-freefont \
-    tzdata
+    fonts-liberation \
+    libasound2 \
+    libatk1.0-0 \
+    libc6 \
+    libcairo2 \
+    libcups2 \
+    libdbus-1-3 \
+    libexpat1 \
+    libfontconfig1 \
+    libgcc1 \
+    libgdk-pixbuf2.0-0 \
+    libglib2.0-0 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libstdc++6 \
+    libx11-6 \
+    libx11-xcb1 \
+    libxcb1 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxi6 \
+    libxrandr2 \
+    libxrender1 \
+    libxss1 \
+    libxtst6 \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
 
-# Puppeteer config
-ENV PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium"
-ENV PUPPETEER_SKIP_DOWNLOAD="true"
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 
-# Timezone
-RUN cp /usr/share/zoneinfo/America/Argentina/Buenos_Aires /etc/localtime
-
-# Copiar tu código (IMPORTANTE)
 WORKDIR /usr/src/app
 COPY . .
 
-# Instalar dependencias si usás scripts propios
 RUN npm install
 
 USER node
