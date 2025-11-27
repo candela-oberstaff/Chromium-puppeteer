@@ -24,21 +24,14 @@ RUN apk add --no-cache \
 # Instalamos la librería Node.js, pero le decimos que OMITA la descarga AHORA.
 RUN npm install puppeteer-core@latest --unsafe-perm --no-cache --ignore-scripts
 
-# --- PASO 2: FORZAR LA DESCARGA DEL BINARIO (POST-INSTALL) ---
-# Usamos el comando específico de Puppeteer para descargar el binario
-# Esto permite que el error sea más claro si falla.
-RUN /usr/local/lib/node_modules/puppeteer-core/node_modules/.bin/puppeteer install \
+# --- PASO 2: FORZAR LA DESCARGA DEL BINARIO (CORRECCIÓN CRÍTICA DE RUTA) ---
+# El binario 'puppeteer' ya está en el PATH global (/usr/local/bin)
+RUN puppeteer install \
     && npm cache clean --force
 
-# El PATH del binario de Chromium ahora es manejado por Puppeteer, pero
-# necesitamos encontrarlo, ya que el número de versión puede variar.
-
-# Temporalmente, configuraremos el ejecutable en blanco para que n8n use el
-# valor por defecto si falla, o podemos reintentar la ruta que buscaste.
-
-# Dejaremos la variable de Coolify para que la definas una vez que veamos
-# la versión descargada (probaremos la ruta más común).
-
+# Path del binario de Chromium (Usamos la ruta más probable después de la descarga)
+# Deberás revisar esta ruta después del despliegue exitoso (ver paso 2).
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/local/lib/node_modules/puppeteer-core/.chromium/chrome/linux-x64/chrome
 ENV PUPPETEER_SKIP_DOWNLOAD=false
 ENV PUPPETEER_DISABLE_SANDBOX=true
 ENV PUPPETEER_ARGS='--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --disable-gpu'
