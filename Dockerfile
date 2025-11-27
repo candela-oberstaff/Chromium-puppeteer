@@ -25,14 +25,14 @@ RUN apk add --no-cache \
 # Instalamos la librería Node.js, pero le decimos que OMITA la descarga AHORA.
 RUN npm install puppeteer-core@latest --unsafe-perm --no-cache --ignore-scripts
 
-# --- PASO 3: FORZAR LA DESCARGA DEL BINARIO (USANDO RUTA ABSOLUTA) ---
-# Usamos la ruta absoluta del binario global: /usr/local/bin/puppeteer
-# Esto evita por completo el error de 'not found' del PATH.
-RUN /usr/local/bin/puppeteer install \
+# --- PASO 3: FORZAR LA DESCARGA DEL BINARIO (USANDO NODE) ---
+# Ejecutamos el script de instalación de Puppeteer directamente con 'node'.
+# Esta es la única forma de garantizar que se encuentre y ejecute.
+RUN node /usr/local/lib/node_modules/puppeteer-core/node_modules/.bin/puppeteer install \
     && npm cache clean --force
 
 # --- PASO 4: CONFIGURACIÓN DE VARIABLES (PARA N8N) ---
-# RUTA MÁS PROBABLE DESPUÉS DE LA DESCARGA EXITOSA.
+# RUTA MÁS PROBABLE DESPUÉS DE LA DESCARGA EXITOSA (de la ruta moderna de Puppeteer)
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/local/lib/node_modules/puppeteer-core/.chromium/chrome/linux-x64/chrome
 ENV PUPPETEER_SKIP_DOWNLOAD=false
 ENV PUPPETEER_DISABLE_SANDBOX=true
